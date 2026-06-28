@@ -3,6 +3,7 @@ kind: Pod
 metadata:
   labels:
     app: spring-build-ci
+
 spec:
   containers:
     - name: maven
@@ -13,33 +14,52 @@ spec:
       volumeMounts:
         - name: m2
           mountPath: /root/.m2/
+
     - name: docker-tools
-      image: rmkanda/docker-tools:latest
+      image: mkanda/docker-tools:latest
       command:
         - cat
       tty: true
       volumeMounts:
-        - mountPath: /var/run
-          name: docker-sock
-        - mountPath: /tmp/trivycache/
-          name: trivycache
+        - name: docker-sock
+          mountPath: /var/run
+        - name: trivycache
+          mountPath: /tmp/trivycache/
+
     - name: trufflehog
-      image: rmkanda/trufflehog
+      image: mkanda/trufflehog
       command:
         - cat
       tty: true
+
     - name: licensefinder
       image: licensefinder/license_finder
       command:
         - cat
       tty: true
+
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:latest
+      command:
+        - cat
+      tty: true
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+
   volumes:
     - name: m2
       hostPath:
         path: /tmp/.m2/
+
     - name: docker-sock
       hostPath:
         path: /var/run
+
     - name: trivycache
       hostPath:
         path: /tmp/trivycache/
+
+    - name: docker-config
+      secret:
+        secretName: regcred
