@@ -6,11 +6,10 @@ pipeline {
     }
 
     stages {
-
         stage('Build') {
             steps {
                 container('maven') {
-                    sh './mvnw clean package'
+                    sh 'mvn clean package'
                 }
             }
         }
