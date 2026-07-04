@@ -21,7 +21,7 @@ pipeline {
                     /kaniko/executor \
                       --context `pwd` \
                       --dockerfile Dockerfile \
-                      --destination mustafomar100/dso-demo:latest
+                      --destination m2026/devsecops-demo:latest
                     '''
                 }
             }
