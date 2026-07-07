@@ -8,6 +8,12 @@ spec:
         - cat
       tty: true
 
+    - name: licensefinder
+      image: licensefinder/license_finder
+      command:
+        - cat
+      tty: true
+
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       command:

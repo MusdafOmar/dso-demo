@@ -1,51 +1,34 @@
-pipeline {
-    agent {
-        kubernetes {
-            yamlFile 'build-agent.yaml'
-        }
-    }
+cat > build-agent.yaml <<'EOF'
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: maven
+      image: maven:3.9-eclipse-temurin-17
+      command:
+        - cat
+      tty: true
 
-    stages {
-        stage('Build') {
-            steps {
-                container('maven') {
-                    sh 'mvn clean package'
-                }
-            }
-        }
+    - name: licensefinder
+      image: licensefinder/license_finder
+      command:
+        - cat
+      tty: true
 
-        stage('SCA') {
-            steps {
-                container('maven') {
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'mvn org.owasp:dependency-check-maven:check'
-                    }
-                }
-            }
-            post {
-                always {
-                    archiveArtifacts allowEmptyArchive: true, artifacts: 'target/dependency-check-report.html', fingerprint: true
-                }
-            }
-        }
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command:
+        - /busybox/cat
+      tty: true
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
 
-        stage('Docker BnP') {
-            steps {
-                container('kaniko') {
-                    sh '''
-                    /kaniko/executor \
-                      --context `pwd` \
-                      --dockerfile Dockerfile \
-                      --destination m2026/devsecops-demo:latest
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy to Dev') {
-            steps {
-                sh "echo 'done'"
-            }
-        }
-    }
-}
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: regcred
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+EOF
