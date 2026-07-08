@@ -1,34 +1,64 @@
-cat > build-agent.yaml <<'EOF'
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: maven
-      image: maven:3.9-eclipse-temurin-17
-      command:
-        - cat
-      tty: true
 
-    - name: licensefinder
-      image: licensefinder/license_finder
-      command:
-        - cat
-      tty: true
+pipeline {
+    agent {
+        kubernetes {
+            yamlFile 'build-agent.yaml'
+        }
+    }
 
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command:
-        - /busybox/cat
-      tty: true
-      volumeMounts:
-        - name: docker-config
-          mountPath: /kaniko/.docker
+    stages {
+        stage('Build') {
+            steps {
+                container('maven') {
+                    sh 'mvn clean package'
+                }
+            }
+        }
 
-  volumes:
-    - name: docker-config
-      secret:
-        secretName: regcred
-        items:
-          - key: .dockerconfigjson
-            path: config.json
-EOF
+        stage('SCA') {
+            steps {
+                container('maven') {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        sh 'mvn org.owasp:dependency-check-maven:check'
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'target/dependency-check-report.html', fingerprint: true
+                }
+            }
+        }
+
+        stage('OSS License Checker') {
+            steps {
+                container('licensefinder') {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        sh 'license_finder'
+                    }
+                }
+            }
+        }
+
+        stage('Docker BnP') {
+            steps {
+                container('kaniko') {
+                    sh '''
+                    /kaniko/executor \
+                      --context `pwd` \
+                      --dockerfile Dockerfile \
+                      --destination m2026/devsecops-demo:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Dev') {
+            steps {
+                sh "echo 'done'"
+            }
+        }
+    }
+}
+
+
