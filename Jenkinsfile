@@ -34,7 +34,7 @@ pipeline {
             }
             post {
                 success {
-                    dependencyTrackPublisher projectName: 'demo', projectVersion: '0.0.1-SNAPSHOT', artifact: 'target/bom.xml'
+                    dependencyTrackPublisher projectName: 'demo', projectVersion: '0.0.1-SNAPSHOT', artifact: 'target/bom.xml', synchronous: false
                     archiveArtifacts allowEmptyArchive: true, artifacts: 'target/bom.xml', fingerprint: true, onlyIfSuccessful: true
                 }
             }
@@ -67,3 +67,4 @@ pipeline {
         }
     }
 }
+
