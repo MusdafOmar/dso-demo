@@ -1,11 +1,9 @@
-
 pipeline {
     agent {
         kubernetes {
             yamlFile 'build-agent.yaml'
         }
     }
-
     stages {
         stage('Build') {
             steps {
@@ -14,7 +12,6 @@ pipeline {
                 }
             }
         }
-
         stage('SCA') {
             steps {
                 container('maven') {
@@ -29,7 +26,19 @@ pipeline {
                 }
             }
         }
-
+        stage('Generate SBOM') {
+            steps {
+                container('maven') {
+                    sh 'mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom'
+                }
+            }
+            post {
+                success {
+                    dependencyTrackPublisher projectName: 'demo', projectVersion: '0.0.1-SNAPSHOT', artifact: 'target/bom.xml', autoCreateProjects: true, synchronous: true
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'target/bom.xml', fingerprint: true, onlyIfSuccessful: true
+                }
+            }
+        }
         stage('OSS License Checker') {
             steps {
                 container('licensefinder') {
@@ -39,7 +48,6 @@ pipeline {
                 }
             }
         }
-
         stage('Docker BnP') {
             steps {
                 container('kaniko') {
@@ -52,13 +60,10 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to Dev') {
             steps {
                 sh "echo 'done'"
             }
         }
     }
-}
-
 
