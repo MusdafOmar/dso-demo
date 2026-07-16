@@ -23,6 +23,24 @@ spec:
         - name: docker-config
           mountPath: /kaniko/.docker
 
+    - name: slscan
+      image: shiftleft/sast-scan
+      command:
+        - cat
+      tty: true
+
+    - name: trivy
+      image: aquasec/trivy:latest
+      command:
+        - cat
+      tty: true
+
+    - name: dockle
+      image: goodwithtech/dockle:v0.4.15
+      command:
+        - cat
+      tty: true
+
   volumes:
     - name: docker-config
       secret:

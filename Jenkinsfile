@@ -48,6 +48,20 @@ pipeline {
                 }
             }
         }
+        stage('SAST') {
+            steps {
+                container('slscan') {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        sh 'scan --src . --type java'
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/*', fingerprint: true
+                }
+            }
+        }
         stage('Docker BnP') {
             steps {
                 container('kaniko') {
@@ -55,8 +69,29 @@ pipeline {
                     /kaniko/executor \
                       --context `pwd` \
                       --dockerfile Dockerfile \
-                      --destination m2026/devsecops-demo:latest
+                      --destination m2026/devsecops-demo:multistage
                     '''
+                }
+            }
+        }
+        stage('Image Analysis') {
+            parallel {
+                stage('Image Linting') {
+                    steps {
+                        container('dockle') {
+                            sh 'dockle docker.io/m2026/devsecops-demo:multistage'
+                        }
+                    }
+                }
+
+                stage('Image Scan') {
+                    steps {
+                        container('trivy') {
+                            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL m2026/devsecops-demo:multistage'
+                            }
+                        }
+                    }
                 }
             }
         }
