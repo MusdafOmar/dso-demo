@@ -110,11 +110,11 @@ pipeline {
                             variable: 'ARGOCD_TOKEN'
                         )
                     ]) {
-                        sh '''
+                         sh '''
                             argocd app sync devsecops-demo \
-                              --server argocd-server.argocd.svc.cluster.local:443 \
+                              --server argocd-server.argocd.svc.cluster.local:80 \
                               --auth-token "$ARGOCD_TOKEN" \
-                              --insecure
+                              --plaintext
                         '''
                     }
                 }
