@@ -101,7 +101,7 @@ pipeline {
             }
         }
 
-                stage('ArgoCD Sync') {
+        stage('ArgoCD Sync') {
             steps {
                 container('argocd') {
                     withCredentials([
@@ -120,3 +120,5 @@ pipeline {
                 }
             }
         }
+    }
+}
