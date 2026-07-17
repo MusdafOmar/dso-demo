@@ -101,7 +101,7 @@ pipeline {
             }
         }
 
-        stage('ArgoCD Sync') {
+                stage('ArgoCD Sync') {
             steps {
                 container('argocd') {
                     withCredentials([
@@ -111,14 +111,7 @@ pipeline {
                         )
                     ]) {
                         sh '''
-                            apk add --no-cache curl
-
-                            curl -sSL -o /tmp/argocd \
-                              https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-
-                            chmod +x /tmp/argocd
-
-                            /tmp/argocd app sync devsecops-demo \
+                            argocd app sync devsecops-demo \
                               --server argocd-server.argocd.svc.cluster.local:443 \
                               --auth-token "$ARGOCD_TOKEN" \
                               --insecure
@@ -127,5 +120,3 @@ pipeline {
                 }
             }
         }
-    }
-}          
