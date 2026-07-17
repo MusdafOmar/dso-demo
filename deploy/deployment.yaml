@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: devsecops-demo
+  name: devsecops-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devsecops-demo
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: devsecops-demo
+    spec:
+      containers:
+      - image: m2026/devsecops-demo:multistage
+        name: devsecops-demo
+        resources: {}
+status: {}
