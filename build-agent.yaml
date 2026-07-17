@@ -42,15 +42,13 @@ spec:
       tty: true
 
     - name: argocd
-  image: alpine:3.20
-  command:
-    - sh
-    - -c
-  args:
-    - cat
-  tty: true
+      image: schoolofdevops/argocd-cli
+      command:
+        - cat
+      tty: true
 
   volumes:
+
     - name: docker-config
       secret:
         secretName: regcred
