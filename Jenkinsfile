@@ -95,7 +95,7 @@ pipeline {
                 }
             }
         }
-                stage('Deploy to Dev') {
+                        stage('Deploy to Dev') {
             steps {
                 sh "echo 'done'"
             }
@@ -111,7 +111,14 @@ pipeline {
                         )
                     ]) {
                         sh '''
-                            argocd app sync devsecops-demo \
+                            apk add --no-cache curl
+
+                            curl -sSL -o /tmp/argocd \
+                              https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+
+                            chmod +x /tmp/argocd
+
+                            /tmp/argocd app sync devsecops-demo \
                               --server argocd-server.argocd.svc.cluster.local:443 \
                               --auth-token "$ARGOCD_TOKEN" \
                               --insecure
@@ -121,4 +128,4 @@ pipeline {
             }
         }
     }
-}
+}          

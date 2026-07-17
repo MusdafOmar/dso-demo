@@ -42,10 +42,13 @@ spec:
       tty: true
 
     - name: argocd
-      image: quay.io/argoproj/argocd:latest
-      command:
-        - cat
-      tty: true
+  image: alpine:3.20
+  command:
+    - sh
+    - -c
+  args:
+    - cat
+  tty: true
 
   volumes:
     - name: docker-config
